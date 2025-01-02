@@ -24,22 +24,24 @@ def get_statistics_hh(text):
     statistic = {}
     vacancies_processed = 0
     sum_of_salary = 0
+    moscow_id = 1
     for page in count(0):
         params = {
             'text': text,
-            'area': 1,
+            'area': moscow_id,
             'page': page
         }
         response = requests.get('https://api.hh.ru/vacancies', params=params)
         response.raise_for_status()
-        if page >= response.json()["pages"] - 1:
+        vacancies = response.json()
+        if page >= vacancies["pages"] - 1:
             statistic[text] = {
-                "vacancies_found": response.json()['found'],
+                "vacancies_found": vacancies['found'],
                 "vacancies_processed": vacancies_processed,
                 "average_salary": int(sum_of_salary/vacancies_processed)
             }
             return statistic
-        for vacancy in response.json()['items']:
+        for vacancy in vacancies['items']:
             if vacancy['salary']:
                 salary = predict_rub_salary_hh(vacancy)
                 if salary:
@@ -59,45 +61,48 @@ def predict_rub_salary_superJob(vacancy):
     return
 
 
-def get_statistics_superJob(text):
+def get_statistics_superJob(text, secret_key):
     statistic = {}
     vacancies_processed = 0
     sum_of_salary = 0
     vacancies_found = None
     for page in count(0):
         headers = {
-            'X-Api-App-Id': os.getenv('SECRET_KEY_SUPERJOB')
+            'X-Api-App-Id': secret_key
         }
         params = {
             'keyword': text,
-            'town': '4',
+            'town': 'Moscow',
             'page': page
         }
         response = requests.get('https://api.superjob.ru/2.0/vacancies/',
                                 headers=headers, params=params)
         response.raise_for_status()
-        if vacancies_found is None:
+        vacancies = response.json()
+        if not vacancies_found:
             vacancies_found = response.json()['total']
-        if not response.json()['more']:
-            if vacancies_processed == 0:
-                statistic[text] = {
-                    "vacancies_found": vacancies_found,
-                    "vacancies_processed": vacancies_processed,
-                    "average_salary": 0
-                }
-            else:
-                statistic[text] = {
-                    "vacancies_found": vacancies_found,
-                    "vacancies_processed": vacancies_processed,
-                    "average_salary": int(sum_of_salary/vacancies_processed)
-                }
-            return statistic
-        for vacancy in response.json()['objects']:
+        if not vacancies['more']:
+            break
+        for vacancy in vacancies['objects']:
             salary = predict_rub_salary_superJob(vacancy)
             if salary:
                 sum_of_salary += salary
                 vacancies_processed += 1
         time.sleep(0.5)
+
+    if not vacancies_processed:
+        statistic[text] = {
+            "vacancies_found": vacancies_found,
+            "vacancies_processed": vacancies_processed,
+            "average_salary": 0
+        }
+    else:
+        statistic[text] = {
+            "vacancies_found": vacancies_found,
+            "vacancies_processed": vacancies_processed,
+            "average_salary": int(sum_of_salary/vacancies_processed)
+        }
+    return statistic
 
 
 def get_table(statistics, title):
@@ -132,8 +137,10 @@ if __name__ == "__main__":
         'php'
     ]
     statistics_superJob = {}
+    secret_key = os.getenv('SECRET_KEY_SUPERJOB')
     for language in languages:
-        statistics_superJob.update(get_statistics_superJob(language))
+        statistics_superJob.update(get_statistics_superJob(language,
+                                                           secret_key))
     get_table(statistics_superJob, "SuperJob Moscow")
 
     statistics_hh = {}
