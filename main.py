@@ -35,12 +35,7 @@ def get_statistics_hh(text):
         response.raise_for_status()
         vacancies = response.json()
         if page >= vacancies["pages"] - 1:
-            statistic[text] = {
-                "vacancies_found": vacancies['found'],
-                "vacancies_processed": vacancies_processed,
-                "average_salary": int(sum_of_salary/vacancies_processed)
-            }
-            return statistic
+            break
         for vacancy in vacancies['items']:
             if vacancy['salary']:
                 salary = predict_rub_salary_hh(vacancy)
@@ -48,6 +43,20 @@ def get_statistics_hh(text):
                     sum_of_salary += salary
                     vacancies_processed += 1
         time.sleep(0.5)
+    if not vacancies_processed:
+        statistic[text] = {
+            "vacancies_found": vacancies['found'],
+            "vacancies_processed": vacancies_processed,
+            "average_salary": 0
+        }
+        return statistic
+    else:
+        statistic[text] = {
+            "vacancies_found": vacancies['found'],
+            "vacancies_processed": vacancies_processed,
+            "average_salary": int(sum_of_salary/vacancies_processed)
+        }
+        return statistic
 
 
 def predict_rub_salary_superJob(vacancy):
@@ -114,11 +123,11 @@ def get_table(statistics, title):
             'Средняя зарплата'
         ]
     ]
-    for language in statistics:
+    for language, language_statistic in statistics.items():
         table.append([language,
-                      statistics[language]['vacancies_found'],
-                      statistics[language]['vacancies_processed'],
-                      statistics[language]['average_salary']])
+                      language_statistic['vacancies_found'],
+                      language_statistic['vacancies_processed'],
+                      language_statistic['average_salary']])
     table = AsciiTable(table)
     table.title = title
     print(table.table)
