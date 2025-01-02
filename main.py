@@ -3,6 +3,7 @@ import time
 import os
 from terminaltables import AsciiTable
 from itertools import count
+from dotenv import load_dotenv
 
 
 def predict_rub_salary_hh(vacancy):
@@ -119,6 +120,7 @@ def get_table(statistics, title):
 
 
 if __name__ == "__main__":
+    load_dotenv()
     languages = [
         'python',
         'c#',
