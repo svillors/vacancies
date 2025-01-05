@@ -6,17 +6,22 @@ from itertools import count
 from dotenv import load_dotenv
 
 
+def predict_salary(salary_from, salary_to):
+    if salary_from and salary_to:
+        avarage_salary = (salary_from + salary_to) / 2
+        return avarage_salary
+    elif salary_from:
+        return salary_from * 1.2
+    elif salary_to:
+        return salary_to * 0.8
+    return
+
+
 def predict_rub_salary_hh(vacancy):
     salary = vacancy["salary"]
     if salary:
         if salary['currency'] == 'RUR':
-            if salary["from"] and salary["to"]:
-                avarage_salary = (salary['from'] + salary['to']) / 2
-                return avarage_salary
-            elif salary["from"]:
-                return salary["from"] * 1.2
-            elif salary["to"]:
-                return salary["to"] * 0.8
+            return predict_salary(salary["from"], salary['to'])
     return
 
 
@@ -43,6 +48,7 @@ def get_statistics_hh(text):
                     sum_of_salary += salary
                     vacancies_processed += 1
         time.sleep(0.5)
+
     if not vacancies_processed:
         statistic[text] = {
             "vacancies_found": vacancies['found'],
@@ -60,14 +66,7 @@ def get_statistics_hh(text):
 
 
 def predict_rub_salary_superJob(vacancy):
-    if vacancy["payment_from"] and vacancy["payment_to"]:
-        avarage_salary = (vacancy['payment_from'] + vacancy['payment_to']) / 2
-        return avarage_salary
-    elif vacancy["payment_from"]:
-        return vacancy["payment_from"] * 1.2
-    elif vacancy["payment_to"]:
-        return vacancy["payment_to"] * 0.8
-    return
+    return predict_salary(vacancy["payment_from"], vacancy["payment_to"])
 
 
 def get_statistics_superJob(text, secret_key):
