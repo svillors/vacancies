@@ -89,7 +89,7 @@ def get_statistics_superJob(text, secret_key):
         response.raise_for_status()
         vacancies = response.json()
         if not vacancies_found:
-            vacancies_found = response.json()['total']
+            vacancies_found = vacancies['total']
         if not vacancies['more']:
             break
         for vacancy in vacancies['objects']:
