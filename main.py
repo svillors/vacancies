@@ -49,20 +49,18 @@ def get_statistics_hh(text):
                     vacancies_processed += 1
         time.sleep(0.5)
 
-    if not vacancies_processed:
-        statistic[text] = {
-            "vacancies_found": vacancies['found'],
-            "vacancies_processed": vacancies_processed,
-            "average_salary": 0
-        }
-        return statistic
-    else:
-        statistic[text] = {
-            "vacancies_found": vacancies['found'],
-            "vacancies_processed": vacancies_processed,
-            "average_salary": int(sum_of_salary/vacancies_processed)
-        }
-        return statistic
+    average_salary = (
+        int(sum_of_salary/vacancies_processed)
+        if vacancies_processed
+        else 0
+    )
+
+    statistic[text] = {
+        "vacancies_found": vacancies['found'],
+        "vacancies_processed": vacancies_processed,
+        "average_salary": average_salary
+    }
+    return statistic
 
 
 def predict_rub_salary_superJob(vacancy):
@@ -98,18 +96,17 @@ def get_statistics_superJob(text, secret_key):
                 vacancies_processed += 1
         time.sleep(0.5)
 
-    if not vacancies_processed:
-        statistic[text] = {
-            "vacancies_found": vacancies_found,
-            "vacancies_processed": vacancies_processed,
-            "average_salary": 0
-        }
-    else:
-        statistic[text] = {
-            "vacancies_found": vacancies_found,
-            "vacancies_processed": vacancies_processed,
-            "average_salary": int(sum_of_salary/vacancies_processed)
-        }
+    average_salary = (
+        int(sum_of_salary/vacancies_processed)
+        if vacancies_processed
+        else 0
+    )
+
+    statistic[text] = {
+        "vacancies_found": vacancies_found,
+        "vacancies_processed": vacancies_processed,
+        "average_salary": average_salary
+    }
     return statistic
 
 
